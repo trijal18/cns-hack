@@ -1,5 +1,8 @@
 from fastapi import FastAPI
+import json
+from fastapi.responses import JSONResponse
 import apimodels
+from models import temp
  
 app = FastAPI()
  
@@ -9,4 +12,7 @@ def read_root():
 
 @app.post("/fishy/")
 async def check_fishy(reqBody: apimodels.UrlRequest):
-    return 1
+    url=reqBody.url
+    res=temp.check_fishy(url)
+    jsonResponse = JSONResponse(status_code=200, content=json.loads(str(res)))
+    return jsonResponse
