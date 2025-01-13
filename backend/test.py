@@ -2,8 +2,8 @@ import requests
 import json
 
 # Define the API endpoint
-# url = "http://13.51.107.169/fishy"
-url="http://127.0.0.1:8000/check_url"
+# url = "http://13.61.146.108/fishy"
+url="http://13.61.146.108/check_url"
 
 # Set up the headers, including the authorization token
 headers = {
@@ -34,3 +34,5 @@ try:
 except requests.exceptions.RequestException as e:
     # Handle exceptions such as network issues
     print("An error occurred:", e)
+
+

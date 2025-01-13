@@ -1,5 +1,6 @@
 import pickle
 from models.feature_extactor import extract_url_features
+# from feature_extactor import extract_url_features
 import joblib
 import numpy as np
 
@@ -17,7 +18,8 @@ def process_url(url):
     new_data = np.array(features).reshape(1, -1)
 
     # Load the trained model
-    classifier = joblib.load(r"models\randomForest.pkl")
+    # classifier = joblib.load(r"models\randomForest.pkl")
+    classifier = joblib.load(r"randomForest.pkl")
 
     # Predict the class for the new data
     prediction = classifier.predict(new_data)
@@ -42,4 +44,4 @@ def process_url(url):
 
 if __name__ == '__main__':
     result=process_url("abc")
-    print(result)
+    print(result)a
