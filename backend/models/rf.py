@@ -19,7 +19,7 @@ def process_url(url):
 
     # Load the trained model
     # classifier = joblib.load(r"models\randomForest.pkl")
-    classifier = joblib.load(r"D:\projects\cns\output_file.pkl")
+    classifier = joblib.load(r"models/decrypted_randomForest.pkl")
 
     # Predict the class for the new data
     prediction = classifier.predict(new_data)

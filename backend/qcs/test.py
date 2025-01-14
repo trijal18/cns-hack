@@ -1,86 +1,79 @@
+from nacl.public import PrivateKey, PublicKey, Box
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 import os
 import joblib
 import io
 
-# Placeholder for Post-Quantum Key Exchange (simulating Kyber)
-class HybridCrypto:
-    @staticmethod
-    def generate_keypair():
-        # Simulate post-quantum key generation
-        public_key = os.urandom(32)  # Example public key
-        private_key = os.urandom(32)  # Example private key
-        return public_key, private_key
-
-    @staticmethod
-    def encapsulate(public_key):
-        # Simulate post-quantum key encapsulation (Kyber-like)
-        shared_secret = os.urandom(32)  # Shared secret for AES
-        ciphertext = os.urandom(64)  # Ciphertext to be sent
-        return ciphertext, shared_secret
-
-    @staticmethod
-    def decapsulate(ciphertext, private_key, shared_secret):
-        # Simulate post-quantum key decapsulation (Kyber-like)
-        # Ensure the decapsulated shared secret matches the original one.
-        return shared_secret  # Return the same shared secret used in encapsulation
+# Generate a post-quantum secure key pair using libsodium (via PyNaCl)
+def generate_key_pair():
+    private_key = PrivateKey.generate()  # Generate private key
+    public_key = private_key.public_key  # Derive public key
+    return private_key, public_key
 
 # Encrypt model using AES
 def encrypt_model(model_bytes, shared_key):
     iv = os.urandom(16)  # Initialization Vector for AES
-    cipher = Cipher(algorithms.AES(shared_key), modes.CFB(iv))
+    cipher = Cipher(algorithms.AES(shared_key[:32]), modes.CFB(iv))  # Use first 32 bytes
     encryptor = cipher.encryptor()
     encrypted_model = encryptor.update(model_bytes) + encryptor.finalize()
     return iv, encrypted_model
 
 # Decrypt model using AES
 def decrypt_model(encrypted_model, shared_key, iv):
-    cipher = Cipher(algorithms.AES(shared_key), modes.CFB(iv))
+    cipher = Cipher(algorithms.AES(shared_key[:32]), modes.CFB(iv))
     decryptor = cipher.decryptor()
     return decryptor.update(encrypted_model) + decryptor.finalize()
 
 # Main process
 if __name__ == "__main__":
-    # Generate post-quantum keypair (simulated)
-    pq_crypto = HybridCrypto()
-    public_key, private_key = pq_crypto.generate_keypair()
-    print("Public Key:", public_key.hex())
-    print("Private Key:", private_key.hex())
-
-    # Simulate key encapsulation to get shared secret
-    ciphertext, shared_key = pq_crypto.encapsulate(public_key)
-    print("Ciphertext:", ciphertext.hex())
-    print("Shared Key (from encapsulation):", shared_key.hex())
-
-    # Simulate key decapsulation to verify shared key
-    derived_shared_key = pq_crypto.decapsulate(ciphertext, private_key, shared_key)
-    print("Shared Key (from decapsulation):", derived_shared_key.hex())
-
-    # Check if encapsulated and decapsulated keys match
-    assert shared_key == derived_shared_key, "Key mismatch!"
-
-    # Load the trained model (example with joblib)
-    model = joblib.load(r"models\randomForest.pkl")
+    # Load the trained model
+    model = joblib.load(r"D:\projects\cns\backend\models\randomForest.pkl")
 
     # Serialize model to bytes using BytesIO
     model_bytes_io = io.BytesIO()
     joblib.dump(model, model_bytes_io)
-    model_bytes = model_bytes_io.getvalue()
+    model_bytes = model_bytes_io.getvalue()  # Get byte data
 
-    # Encrypt the model using AES and the shared key
-    iv, encrypted_model = encrypt_model(model_bytes, shared_key)
-    with open("encrypted_model.bin", "wb") as f:
+    # Key exchange (simulate secure key sharing)
+    private_key_alice, public_key_alice = generate_key_pair()
+    private_key_bob, public_key_bob = generate_key_pair()
+
+    # Shared key generation using public-private key pairs
+    box_alice = Box(private_key_alice, public_key_bob)
+    shared_key_alice = box_alice.shared_key()
+
+    box_bob = Box(private_key_bob, public_key_alice)
+    shared_key_bob = box_bob.shared_key()
+
+    assert shared_key_alice == shared_key_bob  # Ensure keys match
+
+    print("Shared Key:", shared_key_alice.hex())
+
+    # Encrypt the model
+    iv, encrypted_model = encrypt_model(model_bytes, shared_key_alice)
+    with open("pq_encrypted_model.bin", "wb") as f:
         f.write(iv + encrypted_model)
-    print("Model encrypted successfully!")
+    print("Model encrypted successfully using post-quantum encryption!")
+
+    encrypted_model_path = "encrypted_randomForest.pkl"
+    joblib.dump(encrypted_model, encrypted_model_path)
+    print(f"Encryypted model saved successfully to {encrypted_model_path}")
+
 
     # Decrypt the model
-    with open("encrypted_model.bin", "rb") as f:
+    with open("pq_encrypted_model.bin", "rb") as f:
         iv = f.read(16)  # Read IV from the file
         encrypted_model = f.read()  # Read the rest as encrypted model
 
-    decrypted_model_bytes = decrypt_model(encrypted_model, derived_shared_key, iv)
+    decrypted_model_bytes = decrypt_model(encrypted_model, shared_key_bob, iv)
 
     # Deserialize model from decrypted bytes
     decrypted_model_io = io.BytesIO(decrypted_model_bytes)
     decrypted_model = joblib.load(decrypted_model_io)
     print("Model decrypted successfully!")
+
+    # Save the decrypted model to a file
+    decrypted_model_path = "decrypted_randomForest.pkl"
+    joblib.dump(decrypted_model, decrypted_model_path)
+    print(f"Decrypted model saved successfully to {decrypted_model_path}")

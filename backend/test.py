@@ -3,7 +3,7 @@ import json
 
 # Define the API endpoint
 # url = "http://13.61.146.108/fishy"
-url="http://13.61.146.108/check_url"
+url="http://13.61.146.108/"
 
 # Set up the headers, including the authorization token
 headers = {

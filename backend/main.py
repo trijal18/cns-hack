@@ -2,7 +2,9 @@ from fastapi import FastAPI
 import json
 from fastapi.responses import JSONResponse
 import apimodels
-from models import temp, rf
+from models import temp
+from qcs.bin_to_pkl import bin_to_pkl
+import os
  
 app = FastAPI()
  
@@ -19,7 +21,10 @@ async def check_fishy(reqBody: apimodels.UrlRequest):
 
 @app.post("/check_url/")
 async def check_url(reqBody: apimodels.UrlRequest):
+    bin_to_pkl()
     url=reqBody.url
     res=rf.process_url(url)
+    os.remove("models/decrypted_randomForest.pkl")
     jsonResponse = JSONResponse(status_code=200, content=res)
     return jsonResponse
+    
