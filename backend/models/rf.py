@@ -1,6 +1,6 @@
 import pickle
-from models.feature_extactor import extract_url_features
-# from feature_extactor import extract_url_features
+# from models.feature_extactor import extract_url_features
+from feature_extactor import extract_url_features
 import joblib
 import numpy as np
 
@@ -19,7 +19,7 @@ def process_url(url):
 
     # Load the trained model
     # classifier = joblib.load(r"models\randomForest.pkl")
-    classifier = joblib.load(r"randomForest.pkl")
+    classifier = joblib.load(r"D:\projects\cns\output_file.pkl")
 
     # Predict the class for the new data
     prediction = classifier.predict(new_data)
@@ -44,4 +44,4 @@ def process_url(url):
 
 if __name__ == '__main__':
     result=process_url("abc")
-    print(result)a
+    print(result)

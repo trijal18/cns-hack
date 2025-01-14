@@ -13,7 +13,7 @@ headers = {
 
 # Define the request body
 data = {
-    "url":"xyz.com"
+    "url":"pornhub.com"
 }
 
 try:
